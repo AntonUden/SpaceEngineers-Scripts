@@ -1,5 +1,3 @@
-public string shipGyro = "miner_gyro";
-public string shipReactor = "miner_reactor";
 public string[] shipDisplays = {
   "miner_status_display"
 };
@@ -39,26 +37,28 @@ public void Main(string args, UpdateType updateType) {
     Runtime.UpdateFrequency = UpdateFrequency.Update1;
   }
 
-  IMyGyro gyro = GridTerminalSystem.GetBlockWithName(shipGyro) as IMyGyro;
-
-  String gyroData = "Yaw: " + Math.Round(gyro.Yaw, 1) + "\nPitch: " + Math.Round(gyro.Pitch, 1) + "\nRoll: " + Math.Round(gyro.Roll, 1);
-
-  IMyReactor reactor = GridTerminalSystem.GetBlockWithName(shipReactor) as IMyReactor;
-
-  String power = "Power: " + Math.Round(reactor.CurrentOutput, 2) + " MW";
-
+  float reactorOutput = 0;
   MyFixedPoint fuelAmount = 0;
 
   String extra = "";
 
-  List < MyInventoryItem > items = new List < MyInventoryItem > ();
-  reactor.GetInventory().GetItems(items);
+  List < IMyReactor > reactors = new List < IMyReactor > ();
+  GridTerminalSystem.GetBlocksOfType < IMyReactor > (reactors);
 
-  foreach(MyInventoryItem item in items) {
-    if (item.Type == MyItemType.MakeIngot("Uranium")) {
-      fuelAmount += item.Amount;
+  foreach(IMyReactor reactor in reactors) {
+    reactorOutput += reactor.CurrentOutput;
+
+    List < MyInventoryItem > items = new List < MyInventoryItem > ();
+    reactor.GetInventory().GetItems(items);
+
+    foreach(MyInventoryItem item in items) {
+      if (item.Type == MyItemType.MakeIngot("Uranium")) {
+        fuelAmount += item.Amount;
+      }
     }
   }
+
+  String power = "Power: " + Math.Round(reactorOutput, 2) + " MW";
 
   double fuelDouble = Double.Parse(fuelAmount + "");
 
@@ -71,5 +71,5 @@ public void Main(string args, UpdateType updateType) {
 
   String fuel = "Fuel: " + Math.Round(fuelDouble, 2);
 
-  DisplayMessage(gyroData + "\n" + power + "\n" + fuel + "\n" + extra);
+  DisplayMessage(power + "\n" + fuel + "\n" + extra);
 }
